@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 1. Capital Markets PostgreSQL 16 Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: insight_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: insight_brokerage
+      POSTGRES_USER: angel_analyst
+      POSTGRES_PASSWORD: angel_secure_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U angel_analyst -d insight_brokerage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Decoupled MCP Server (SSE Transport)
+  mcp_server:
+    build:
+      context: .
+      dockerfile: mcp_server/Dockerfile
+    container_name: insight_mcp_server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://angel_analyst:angel_secure_password@postgres:5432/insight_brokerage
+      MCP_SERVER_HOST: 0.0.0.0
+      MCP_SERVER_PORT: 8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 3. FastAPI Backend (LangGraph + Deterministic Analytics)
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: insight_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://angel_analyst:angel_secure_password@postgres:5432/insight_brokerage
+      MCP_SERVER_URL: http://mcp_server:8001/sse
+      MCP_USE_IN_PROCESS: "false"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mcp_server
+
+  # 4. React 19 Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: insight_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

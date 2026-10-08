@@ -1,0 +1,44 @@
+{
+  "anomalies": [
+    {
+      "id": "august_fno_turnover_drop",
+      "name": "August F&O Options Turnover Contraction",
+      "metric": "gross_turnover",
+      "segment": "FNO_OPTIONS",
+      "affected_period": {
+        "start": "2024-08-01",
+        "end": "2024-08-31"
+      },
+      "baseline_period": {
+        "start": "2024-07-01",
+        "end": "2024-07-31"
+      },
+      "target_percentage_change": -28.0,
+      "primary_driver_dimensions": {
+        "instrument_type": "OPTIDX",
+        "underlyings": ["BANKNIFTY", "NIFTY"],
+        "client_tier": "RETAIL"
+      },
+      "business_context": "Sharp collapse in India VIX (implied volatility down to 11.8) coupled with regulatory uncertainty surrounding SEBI index derivative lot-size revisions caused retail option buyers to pull back trading activity."
+    },
+    {
+      "id": "august_14_rms_rejection_spike",
+      "name": "August 14 Peak Margin RMS Rejection Spike",
+      "metric": "order_rejection_rate",
+      "target_date": "2024-08-14",
+      "rejection_reason": "RMS_INSUFFICIENT_MARGIN",
+      "target_rejection_percentage": 34.8,
+      "baseline_rejection_percentage": 2.4,
+      "business_context": "Intraday BankNifty 650-point sudden gap-down triggered exchange peak margin snapshot failures, resulting in 14x elevated RMS rejections for retail intraday limit and stop-loss orders."
+    },
+    {
+      "id": "thursday_expiry_volume_surge",
+      "name": "Thursday Weekly Expiry Volume Surge",
+      "metric": "daily_turnover",
+      "day_of_week": "Thursday",
+      "surge_multiplier": 3.2,
+      "segment": "FNO_OPTIONS",
+      "business_context": "Weekly NSE Nifty 50 contract expiry generates massive scalping, 0DTE theta-decay plays, and algorithmic rollover volume, concentrating up to 38% of total weekly retail turnover on Thursdays."
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+version: "1.0.0"
+domain: "capital_markets_retail_broking"
+organization: "Angel One"
+
+metrics:
+  gross_turnover:
+    name: "Gross Turnover"
+    description: "Total traded turnover across completed trades in INR. For equities and futures: traded_quantity * traded_price; for options: premium turnover."
+    formula: "SUM(trades.turnover)"
+    sql_expression: "SUM(trades.traded_quantity * trades.traded_price)"
+    tables:
+      - "trades"
+    default_aggregation: "SUM"
+    unit: "INR"
+    dimensions:
+      - "instruments.segment"
+      - "instruments.instrument_type"
+      - "clients.tier"
+      - "clients.zone"
+      - "trades.trade_timestamp"
+    synonyms:
+      - "volume"
+      - "turnover"
+      - "traded value"
+      - "total volume"
+      - "gross traded value"
+
+  net_brokerage:
+    name: "Net Brokerage Revenue"
+    description: "Total brokerage revenue earned by the broker from completed customer trades."
+    formula: "SUM(trades.brokerage_amount)"
+    sql_expression: "SUM(trades.brokerage_amount)"
+    tables:
+      - "trades"
+    default_aggregation: "SUM"
+    unit: "INR"
+    dimensions:
+      - "instruments.segment"
+      - "clients.tier"
+      - "clients.zone"
+    synonyms:
+      - "brokerage"
+      - "revenue"
+      - "broker commission"
+      - "fees"
+
+  average_brokerage_yield:
+    name: "Average Brokerage Yield (bps)"
+    description: "Net brokerage revenue earned expressed in basis points (1 bps = 0.01%) of gross turnover."
+    formula: "(SUM(trades.brokerage_amount) / NULLIF(SUM(trades.turnover), 0)) * 10000"
+    sql_expression: "(SUM(trades.brokerage_amount) / NULLIF(SUM(trades.traded_quantity * trades.traded_price), 0)) * 10000"
+    tables:
+      - "trades"
+    unit: "bps"
+    dimensions:
+      - "instruments.segment"
+      - "clients.tier"
+    synonyms:
+      - "yield"
+      - "brokerage yield"
+      - "take rate"
+      - "yield in bps"
+
+  order_fill_rate:
+    name: "Order Fill Rate (%)"
+    description: "Percentage of placed customer orders successfully matched and executed into completed trades."
+    formula: "(COUNT(CASE WHEN orders.status = 'COMPLETE' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    sql_expression: "(COUNT(CASE WHEN orders.status = 'COMPLETE' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    tables:
+      - "orders"
+    unit: "percentage"
+    dimensions:
+      - "orders.order_type"
+      - "instruments.segment"
+      - "clients.tier"
+    synonyms:
+      - "fill rate"
+      - "execution rate"
+      - "order completion rate"
+      - "success rate"
+
+  rms_rejection_rate:
+    name: "RMS Margin Rejection Rate (%)"
+    description: "Percentage of placed orders rejected by Risk Management System (RMS) specifically due to insufficient client margin."
+    formula: "(COUNT(CASE WHEN orders.status = 'REJECTED' AND orders.rejection_reason = 'RMS_INSUFFICIENT_MARGIN' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    sql_expression: "(COUNT(CASE WHEN orders.status = 'REJECTED' AND orders.rejection_reason = 'RMS_INSUFFICIENT_MARGIN' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    tables:
+      - "orders"
+    unit: "percentage"
+    dimensions:
+      - "orders.rejection_reason"
+      - "clients.tier"
+      - "instruments.segment"
+      - "orders.order_timestamp"
+    synonyms:
+      - "rms rejections"
+      - "margin rejections"
+      - "margin rejection rate"
+      - "insufficient margin rate"
+
+  total_order_rejection_rate:
+    name: "Total Order Rejection Rate (%)"
+    description: "Percentage of all placed orders rejected by RMS or exchange connectivity."
+    formula: "(COUNT(CASE WHEN orders.status = 'REJECTED' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    sql_expression: "(COUNT(CASE WHEN orders.status = 'REJECTED' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0)"
+    tables:
+      - "orders"
+    unit: "percentage"
+    dimensions:
+      - "orders.rejection_reason"
+      - "clients.tier"
+    synonyms:
+      - "rejection rate"
+      - "rejections"
+      - "failed orders"
+
+  active_demat_clients:
+    name: "Active Demat Clients"
+    description: "Count of distinct active Demat account holders who executed at least one trade in the specified period."
+    formula: "COUNT(DISTINCT trades.client_id)"
+    sql_expression: "COUNT(DISTINCT trades.client_id)"
+    tables:
+      - "trades"
+      - "clients"
+    unit: "count"
+    dimensions:
+      - "clients.tier"
+      - "clients.zone"
+      - "clients.state"
+    synonyms:
+      - "active traders"
+      - "active clients"
+      - "transacting clients"
+      - "client count"
+
+  fno_turnover_share:
+    name: "F&O Turnover Contribution Share (%)"
+    description: "Proportion of gross turnover generated from F&O contracts (options and futures) relative to total broking turnover."
+    formula: "(SUM(CASE WHEN instruments.segment IN ('FNO_OPTIONS', 'FNO_FUTURES') THEN trades.turnover ELSE 0 END) * 100.0) / NULLIF(SUM(trades.turnover), 0)"
+    sql_expression: "(SUM(CASE WHEN instruments.segment IN ('FNO_OPTIONS', 'FNO_FUTURES') THEN trades.turnover ELSE 0 END) * 100.0) / NULLIF(SUM(trades.turnover), 0)"
+    tables:
+      - "trades"
+      - "instruments"
+    unit: "percentage"
+    dimensions:
+      - "instruments.segment"
+      - "instruments.instrument_type"
+    synonyms:
+      - "fno share"
+      - "derivatives contribution"
+      - "f&o ratio"

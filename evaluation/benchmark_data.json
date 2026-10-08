@@ -1,0 +1,427 @@
+{
+  "version": "1.0.0",
+  "domain": "capital_markets_retail_broking",
+  "organization": "Angel One",
+  "benchmark_queries": [
+    {
+      "id": "T1_01",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "How many total clients are onboarded in the database?",
+      "expected_sql": "SELECT COUNT(*) AS total_clients FROM clients",
+      "metric_id": "client_count"
+    },
+    {
+      "id": "T1_02",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "Count the number of active demat account holders",
+      "expected_sql": "SELECT COUNT(*) AS active_demat_count FROM clients WHERE demat_active_flag = TRUE AND account_status = 'ACTIVE'",
+      "metric_id": "active_demat_clients"
+    },
+    {
+      "id": "T1_03",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "Show client distribution by wealth tier",
+      "expected_sql": "SELECT tier, COUNT(*) AS client_count FROM clients GROUP BY tier ORDER BY client_count DESC",
+      "metric_id": "client_tier_distribution"
+    },
+    {
+      "id": "T1_04",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "How many clients reside in Maharashtra?",
+      "expected_sql": "SELECT COUNT(*) AS maharashtra_clients FROM clients WHERE state = 'Maharashtra'",
+      "metric_id": "client_count"
+    },
+    {
+      "id": "T1_05",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "List client counts across geographical zones",
+      "expected_sql": "SELECT zone, COUNT(*) AS count FROM clients GROUP BY zone ORDER BY count DESC",
+      "metric_id": "client_distribution"
+    },
+    {
+      "id": "T1_06",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "What is the total number of trade fills recorded in the book?",
+      "expected_sql": "SELECT COUNT(*) AS total_trades FROM trades",
+      "metric_id": "trade_count"
+    },
+    {
+      "id": "T1_07",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "How many orders have been placed in total?",
+      "expected_sql": "SELECT COUNT(*) AS total_orders FROM orders",
+      "metric_id": "order_count"
+    },
+    {
+      "id": "T1_08",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "List all order counts by status",
+      "expected_sql": "SELECT status, COUNT(*) AS count FROM orders GROUP BY status",
+      "metric_id": "order_status_count"
+    },
+    {
+      "id": "T1_09",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "How many instruments are tradable on NSE?",
+      "expected_sql": "SELECT COUNT(*) AS nse_instruments FROM instruments WHERE exchange = 'NSE'",
+      "metric_id": "instrument_count"
+    },
+    {
+      "id": "T1_10",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "Count instruments by market segment",
+      "expected_sql": "SELECT segment, COUNT(*) AS count FROM instruments GROUP BY segment",
+      "metric_id": "segment_count"
+    },
+    {
+      "id": "T1_11",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "What is the total gross turnover across all executed trades?",
+      "expected_sql": "SELECT ROUND(SUM(turnover), 2) AS total_gross_turnover FROM trades",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T1_12",
+      "tier": "Tier 1: Single Filter & Aggregation",
+      "prompt": "What is the total brokerage revenue collected?",
+      "expected_sql": "SELECT ROUND(SUM(brokerage_amount), 2) AS total_brokerage FROM trades",
+      "metric_id": "net_brokerage"
+    },
+    {
+      "id": "T2_01",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "What is the gross turnover and trade count by market segment?",
+      "expected_sql": "SELECT i.segment, COUNT(t.trade_id) AS trade_count, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id GROUP BY i.segment ORDER BY turnover DESC",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T2_02",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Show turnover contribution broken down by client wealth tier",
+      "expected_sql": "SELECT c.tier, COUNT(t.trade_id) AS trade_count, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN clients c ON t.client_id = c.client_id GROUP BY c.tier ORDER BY turnover DESC",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T2_03",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "List total brokerage earned by client zone",
+      "expected_sql": "SELECT c.zone, ROUND(SUM(t.brokerage_amount), 2) AS brokerage FROM trades t JOIN clients c ON t.client_id = c.client_id GROUP BY c.zone ORDER BY brokerage DESC",
+      "metric_id": "net_brokerage"
+    },
+    {
+      "id": "T2_04",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "What is the total turnover for HNI clients in FNO_OPTIONS?",
+      "expected_sql": "SELECT ROUND(SUM(t.turnover), 2) AS hni_options_turnover FROM trades t JOIN clients c ON t.client_id = c.client_id JOIN instruments i ON t.instrument_id = i.instrument_id WHERE c.tier = 'HNI' AND i.segment = 'FNO_OPTIONS'",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T2_05",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Show total order volume and rejection counts by client tier",
+      "expected_sql": "SELECT c.tier, COUNT(o.order_id) AS total_orders, COUNT(CASE WHEN o.status = 'REJECTED' THEN 1 END) AS rejected_orders FROM orders o JOIN clients c ON o.client_id = c.client_id GROUP BY c.tier",
+      "metric_id": "order_counts"
+    },
+    {
+      "id": "T2_06",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "List the top 5 trading instruments by total turnover",
+      "expected_sql": "SELECT i.tradingsymbol, i.segment, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id GROUP BY i.tradingsymbol, i.segment ORDER BY turnover DESC LIMIT 5",
+      "metric_id": "top_instruments"
+    },
+    {
+      "id": "T2_07",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Find top 10 retail clients with highest executed turnover",
+      "expected_sql": "SELECT c.client_id, c.name, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN clients c ON t.client_id = c.client_id WHERE c.tier = 'RETAIL' GROUP BY c.client_id, c.name ORDER BY turnover DESC LIMIT 10",
+      "metric_id": "client_turnover"
+    },
+    {
+      "id": "T2_08",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Calculate STT tax collected per market segment",
+      "expected_sql": "SELECT i.segment, ROUND(SUM(t.stt_tax), 2) AS total_stt FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id GROUP BY i.segment ORDER BY total_stt DESC",
+      "metric_id": "tax_metrics"
+    },
+    {
+      "id": "T2_09",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Show completed orders vs rejected orders for BankNifty options",
+      "expected_sql": "SELECT o.status, COUNT(*) AS count FROM orders o JOIN instruments i ON o.instrument_id = i.instrument_id WHERE i.tradingsymbol LIKE 'BANKNIFTY%' GROUP BY o.status",
+      "metric_id": "order_status"
+    },
+    {
+      "id": "T2_10",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "What is the total exchange fee paid by Super HNI traders?",
+      "expected_sql": "SELECT ROUND(SUM(t.exchange_turnover_fee), 2) AS exchange_fee FROM trades t JOIN clients c ON t.client_id = c.client_id WHERE c.tier = 'SUPER_HNI'",
+      "metric_id": "fee_metrics"
+    },
+    {
+      "id": "T2_11",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "List client counts and active trade counts for top 5 cities",
+      "expected_sql": "SELECT c.city, COUNT(DISTINCT c.client_id) AS clients, COUNT(t.trade_id) AS trades FROM clients c LEFT JOIN trades t ON c.client_id = t.client_id GROUP BY c.city ORDER BY trades DESC LIMIT 5",
+      "metric_id": "city_metrics"
+    },
+    {
+      "id": "T2_12",
+      "tier": "Tier 2: Multi-Table Joins",
+      "prompt": "Show average trade execution size in lots across segments",
+      "expected_sql": "SELECT i.segment, ROUND(AVG(t.traded_quantity / NULLIF(i.lot_size, 0)), 2) AS avg_lots FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id GROUP BY i.segment",
+      "metric_id": "lot_metrics"
+    },
+    {
+      "id": "T3_01",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Show monthly turnover trend across 2024",
+      "expected_sql": "SELECT strftime('%Y-%m', trade_timestamp) AS month, ROUND(SUM(turnover), 2) AS turnover FROM trades GROUP BY month ORDER BY month",
+      "metric_id": "monthly_turnover"
+    },
+    {
+      "id": "T3_02",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Compare Thursday expiry turnover against other weekdays",
+      "expected_sql": "SELECT CASE CAST(strftime('%w', t.trade_timestamp) AS INTEGER) WHEN 4 THEN 'Thursday' ELSE 'Weekday' END AS day_type, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id WHERE i.segment = 'FNO_OPTIONS' GROUP BY day_type",
+      "metric_id": "thursday_turnover"
+    },
+    {
+      "id": "T3_03",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Show daily trade execution counts for August 2024",
+      "expected_sql": "SELECT DATE(trade_timestamp) AS trade_date, COUNT(*) AS trade_count FROM trades WHERE strftime('%Y-%m', trade_timestamp) = '2024-08' GROUP BY trade_date ORDER BY trade_date",
+      "metric_id": "daily_trades"
+    },
+    {
+      "id": "T3_04",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "What is the peak hourly trading volume between 9:15 AM and 3:30 PM?",
+      "expected_sql": "SELECT strftime('%H', trade_timestamp) AS trade_hour, COUNT(*) AS fills, ROUND(SUM(turnover), 2) AS turnover FROM trades GROUP BY trade_hour ORDER BY turnover DESC",
+      "metric_id": "hourly_volume"
+    },
+    {
+      "id": "T3_05",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Show monthly brokerage revenue trend",
+      "expected_sql": "SELECT strftime('%Y-%m', trade_timestamp) AS month, ROUND(SUM(brokerage_amount), 2) AS revenue FROM trades GROUP BY month ORDER BY month",
+      "metric_id": "monthly_revenue"
+    },
+    {
+      "id": "T3_06",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Track daily order rejection rate percentage during August",
+      "expected_sql": "SELECT DATE(order_timestamp) AS o_date, ROUND((COUNT(CASE WHEN status = 'REJECTED' THEN 1 END) * 100.0) / COUNT(*), 2) AS rejection_rate FROM orders WHERE strftime('%Y-%m', order_timestamp) = '2024-08' GROUP BY o_date ORDER BY o_date",
+      "metric_id": "daily_rejections"
+    },
+    {
+      "id": "T3_07",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Show turnover split between July and August for Options",
+      "expected_sql": "SELECT strftime('%Y-%m', t.trade_timestamp) AS month, ROUND(SUM(t.turnover), 2) AS turnover FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id WHERE i.segment = 'FNO_OPTIONS' AND strftime('%Y-%m', t.trade_timestamp) IN ('2024-07', '2024-08') GROUP BY month ORDER BY month",
+      "metric_id": "fno_turnover_pop"
+    },
+    {
+      "id": "T3_08",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Compare weekly options turnover on Thursdays vs Fridays",
+      "expected_sql": "SELECT CASE CAST(strftime('%w', trade_timestamp) AS INTEGER) WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday' END AS day, ROUND(SUM(turnover), 2) AS turnover FROM trades WHERE CAST(strftime('%w', trade_timestamp) AS INTEGER) IN (4, 5) GROUP BY day",
+      "metric_id": "weekday_comparison"
+    },
+    {
+      "id": "T3_09",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "Show trade count trend by day of week",
+      "expected_sql": "SELECT strftime('%w', trade_timestamp) AS dow, COUNT(*) AS trade_count FROM trades GROUP BY dow ORDER BY dow",
+      "metric_id": "dow_trades"
+    },
+    {
+      "id": "T3_10",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "How did active client transacting count trend month over month?",
+      "expected_sql": "SELECT strftime('%Y-%m', trade_timestamp) AS month, COUNT(DISTINCT client_id) AS active_clients FROM trades GROUP BY month ORDER BY month",
+      "metric_id": "active_client_trend"
+    },
+    {
+      "id": "T3_11",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "List daily orders placed between August 10 and August 18",
+      "expected_sql": "SELECT DATE(order_timestamp) AS order_date, COUNT(*) AS count FROM orders WHERE DATE(order_timestamp) BETWEEN '2024-08-10' AND '2024-08-18' GROUP BY order_date ORDER BY order_date",
+      "metric_id": "daily_orders"
+    },
+    {
+      "id": "T3_12",
+      "tier": "Tier 3: Time-Series & Trends",
+      "prompt": "What was the total volume on Thursday expiry dates?",
+      "expected_sql": "SELECT ROUND(SUM(t.turnover), 2) AS expiry_turnover FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id WHERE i.segment = 'FNO_OPTIONS' AND CAST(strftime('%w', t.trade_timestamp) AS INTEGER) = 4",
+      "metric_id": "expiry_turnover"
+    },
+    {
+      "id": "T4_01",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is our overall order fill rate by order type?",
+      "expected_sql": "SELECT order_type, COUNT(*) AS total_orders, COUNT(CASE WHEN status = 'COMPLETE' THEN 1 END) AS filled_orders, ROUND((COUNT(CASE WHEN status = 'COMPLETE' THEN 1 END) * 100.0) / COUNT(*), 2) AS fill_rate_pct FROM orders GROUP BY order_type",
+      "metric_id": "order_fill_rate"
+    },
+    {
+      "id": "T4_02",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "Calculate average brokerage yield in basis points by market segment",
+      "expected_sql": "SELECT i.segment, ROUND((SUM(t.brokerage_amount) / NULLIF(SUM(t.turnover), 0)) * 10000, 2) AS yield_bps FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id GROUP BY i.segment",
+      "metric_id": "average_brokerage_yield"
+    },
+    {
+      "id": "T4_03",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "Calculate RMS margin rejection rate percentage",
+      "expected_sql": "SELECT ROUND((COUNT(CASE WHEN status = 'REJECTED' AND rejection_reason = 'RMS_INSUFFICIENT_MARGIN' THEN 1 END) * 100.0) / COUNT(*), 2) AS rms_rejection_rate FROM orders",
+      "metric_id": "rms_rejection_rate"
+    },
+    {
+      "id": "T4_04",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is the total order rejection rate across all reasons?",
+      "expected_sql": "SELECT ROUND((COUNT(CASE WHEN status = 'REJECTED' THEN 1 END) * 100.0) / COUNT(*), 2) AS rejection_rate FROM orders",
+      "metric_id": "total_order_rejection_rate"
+    },
+    {
+      "id": "T4_05",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "Calculate F&O turnover contribution share percentage",
+      "expected_sql": "SELECT ROUND((SUM(CASE WHEN i.segment IN ('FNO_OPTIONS', 'FNO_FUTURES') THEN t.turnover ELSE 0 END) * 100.0) / NULLIF(SUM(t.turnover), 0), 2) AS fno_share_pct FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id",
+      "metric_id": "fno_turnover_share"
+    },
+    {
+      "id": "T4_06",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is the count of active Demat clients transacting in July 2024?",
+      "expected_sql": "SELECT COUNT(DISTINCT client_id) AS active_demat_clients FROM trades WHERE strftime('%Y-%m', trade_timestamp) = '2024-07'",
+      "metric_id": "active_demat_clients"
+    },
+    {
+      "id": "T4_07",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is the net brokerage revenue collected in equity cash?",
+      "expected_sql": "SELECT ROUND(SUM(t.brokerage_amount), 2) AS equity_brokerage FROM trades t JOIN instruments i ON t.instrument_id = i.instrument_id WHERE i.segment = 'EQUITY_CASH'",
+      "metric_id": "net_brokerage"
+    },
+    {
+      "id": "T4_08",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is the formula for Order Fill Rate in the metric catalog?",
+      "expected_sql": "N/A (Semantic Catalog Lookup)",
+      "metric_id": "order_fill_rate"
+    },
+    {
+      "id": "T4_09",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What is the definition and formula of Average Brokerage Yield?",
+      "expected_sql": "N/A (Semantic Catalog Lookup)",
+      "metric_id": "average_brokerage_yield"
+    },
+    {
+      "id": "T4_10",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "Calculate order fill rate for Market orders vs Limit orders",
+      "expected_sql": "SELECT order_type, ROUND((COUNT(CASE WHEN status = 'COMPLETE' THEN 1 END) * 100.0) / COUNT(*), 2) AS fill_rate FROM orders WHERE order_type IN ('MARKET', 'LIMIT') GROUP BY order_type",
+      "metric_id": "order_fill_rate"
+    },
+    {
+      "id": "T4_11",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "Show brokerage yield in bps broken down by client tier",
+      "expected_sql": "SELECT c.tier, ROUND((SUM(t.brokerage_amount) / NULLIF(SUM(t.turnover), 0)) * 10000, 2) AS yield_bps FROM trades t JOIN clients c ON t.client_id = c.client_id GROUP BY c.tier",
+      "metric_id": "average_brokerage_yield"
+    },
+    {
+      "id": "T4_12",
+      "tier": "Tier 4: Semantic Metric Store",
+      "prompt": "What percentage of orders are rejected due to circuit limits?",
+      "expected_sql": "SELECT ROUND((COUNT(CASE WHEN rejection_reason = 'CIRCUIT_LIMIT_BREACH' THEN 1 END) * 100.0) / COUNT(*), 2) AS circuit_rejection_rate FROM orders",
+      "metric_id": "total_order_rejection_rate"
+    },
+    {
+      "id": "T5_01",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Why did F&O volume drop in August?",
+      "expected_sql": "Multi-query decomposition (July vs August F&O totals, OPTIDX vs OPTSTK split, client tier breakdown, RMS rejections)",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T5_02",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "What caused the spike in RMS margin rejections on August 14?",
+      "expected_sql": "Multi-query decomposition (Daily rejection trend Aug 10-18, rejection reasons share on Aug 14)",
+      "metric_id": "rms_rejection_rate"
+    },
+    {
+      "id": "T5_03",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Why did retail options turnover decrease between July and August?",
+      "expected_sql": "Multi-query decomposition (Retail options July vs Aug turnover delta, lot size analysis)",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T5_04",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Investigate root cause of order execution failures in mid-August",
+      "expected_sql": "Multi-query decomposition (RMS margin checks, exchange connectivity checks)",
+      "metric_id": "order_fill_rate"
+    },
+    {
+      "id": "T5_05",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Why is Thursday options turnover significantly higher than other weekdays?",
+      "expected_sql": "Multi-query decomposition (NSE weekly expiry volume concentration by instrument type)",
+      "metric_id": "thursday_turnover"
+    },
+    {
+      "id": "T5_06",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "What drove the contraction in index options trading during August?",
+      "expected_sql": "Multi-query decomposition (OPTIDX July vs Aug turnover and IV compression)",
+      "metric_id": "gross_turnover"
+    },
+    {
+      "id": "T5_07",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Why did client active trading count decline in August?",
+      "expected_sql": "Multi-query decomposition (Active clients by tier and segment July vs Aug)",
+      "metric_id": "active_demat_clients"
+    },
+    {
+      "id": "T5_08",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "What caused the drop in brokerage yield for equity cash?",
+      "expected_sql": "Multi-query decomposition (Delivery vs Intraday turnover mix and zero brokerage cap)",
+      "metric_id": "average_brokerage_yield"
+    },
+    {
+      "id": "T5_09",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Explain why stop-loss orders had lower fill rates than market orders",
+      "expected_sql": "Multi-query decomposition (Fill rates by order type and trigger price breaches)",
+      "metric_id": "order_fill_rate"
+    },
+    {
+      "id": "T5_10",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Why did BankNifty options experience high margin rejections on August 14?",
+      "expected_sql": "Multi-query decomposition (Peak intraday margin snapshots on BankNifty gap down)",
+      "metric_id": "rms_rejection_rate"
+    },
+    {
+      "id": "T5_11",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "What are the primary drivers of brokerage revenue growth across segments?",
+      "expected_sql": "Multi-query decomposition (Turnover variance, contract volume, and bps yield by segment)",
+      "metric_id": "net_brokerage"
+    },
+    {
+      "id": "T5_12",
+      "tier": "Tier 5: Diagnostic Root-Cause",
+      "prompt": "Investigate turnover variance between Western and Northern zones in derivatives",
+      "expected_sql": "Multi-query decomposition (Zone breakdown of F&O trading and client density)",
+      "metric_id": "gross_turnover"
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "tables": {
+    "clients": {
+      "description": "Retail, HNI, and institutional client demat account profiles, geographical zones, and account status.",
+      "aliases": ["users", "customers", "traders", "investors", "demat_accounts"],
+      "primary_key": "client_id",
+      "columns": {
+        "client_id": {
+          "type": "VARCHAR(32)",
+          "description": "Unique client identifier (e.g. CL_0001)",
+          "is_primary": true
+        },
+        "name": {
+          "type": "VARCHAR(128)",
+          "description": "Full name of the client"
+        },
+        "email": {
+          "type": "VARCHAR(128)",
+          "description": "Client email address"
+        },
+        "tier": {
+          "type": "VARCHAR(32)",
+          "description": "Client wealth tier: RETAIL, HNI, SUPER_HNI, or INSTITUTIONAL",
+          "enum_values": ["RETAIL", "HNI", "SUPER_HNI", "INSTITUTIONAL"]
+        },
+        "city": {
+          "type": "VARCHAR(64)",
+          "description": "City of residence in India (e.g. Mumbai, Bangalore, Delhi, Ahmedabad)"
+        },
+        "state": {
+          "type": "VARCHAR(64)",
+          "description": "State in India (e.g. Maharashtra, Karnataka, Gujarat)"
+        },
+        "zone": {
+          "type": "VARCHAR(32)",
+          "description": "Geographical region: NORTH, SOUTH, EAST, WEST",
+          "enum_values": ["NORTH", "SOUTH", "EAST", "WEST"]
+        },
+        "account_status": {
+          "type": "VARCHAR(32)",
+          "description": "Account status: ACTIVE, SUSPENDED, or CLOSED",
+          "enum_values": ["ACTIVE", "SUSPENDED", "CLOSED"]
+        },
+        "demat_active_flag": {
+          "type": "BOOLEAN",
+          "description": "True if client holds an active Demat account ready for execution"
+        },
+        "created_at": {
+          "type": "TIMESTAMP",
+          "description": "Timestamp when client account was onboarded"
+        }
+      }
+    },
+    "instruments": {
+      "description": "Tradable securities master across NSE, BSE, and MCX covering Equities, Options, and Futures contracts.",
+      "aliases": ["stocks", "scripts", "contracts", "securities", "tickers", "symbols"],
+      "primary_key": "instrument_id",
+      "columns": {
+        "instrument_id": {
+          "type": "VARCHAR(32)",
+          "description": "Unique security identifier (e.g. INS_001)",
+          "is_primary": true
+        },
+        "tradingsymbol": {
+          "type": "VARCHAR(64)",
+          "description": "Exchange trading symbol (e.g. RELIANCE, NIFTY24AUG24500CE, BANKNIFTY24AUG50000PE)"
+        },
+        "exchange": {
+          "type": "VARCHAR(16)",
+          "description": "Exchange identifier: NSE, BSE, MCX",
+          "enum_values": ["NSE", "BSE", "MCX"]
+        },
+        "segment": {
+          "type": "VARCHAR(32)",
+          "description": "Market segment: EQUITY_CASH, FNO_OPTIONS, FNO_FUTURES, COMMODITY",
+          "enum_values": ["EQUITY_CASH", "FNO_OPTIONS", "FNO_FUTURES", "COMMODITY"]
+        },
+        "instrument_type": {
+          "type": "VARCHAR(16)",
+          "description": "Derivative or cash type: OPTIDX (Index Option), OPTSTK (Stock Option), FUTIDX (Index Future), FUTSTK (Stock Future), EQ (Equity Cash)",
+          "enum_values": ["OPTIDX", "OPTSTK", "FUTIDX", "FUTSTK", "EQ"]
+        },
+        "strike_price": {
+          "type": "NUMERIC(12, 2)",
+          "description": "Option strike price, NULL for equity cash or futures"
+        },
+        "expiry_date": {
+          "type": "DATE",
+          "description": "Contract expiry date, NULL for equity cash"
+        },
+        "lot_size": {
+          "type": "INT",
+          "description": "Market lot quantity (e.g. 25 for Nifty, 15 for BankNifty, 1 for Equity)"
+        },
+        "tick_size": {
+          "type": "NUMERIC(6, 2)",
+          "description": "Minimum price movement increment (typically 0.05)"
+        }
+      }
+    },
+    "orders": {
+      "description": "Order audit trail containing order placement, order type, price, and execution or RMS rejection status.",
+      "aliases": ["order_book", "placements", "transactions", "bids"],
+      "primary_key": "order_id",
+      "columns": {
+        "order_id": {
+          "type": "VARCHAR(64)",
+          "description": "Unique order ID (e.g. ORD_20240814_000123)",
+          "is_primary": true
+        },
+        "client_id": {
+          "type": "VARCHAR(32)",
+          "description": "Foreign key to clients.client_id",
+          "foreign_key": "clients.client_id"
+        },
+        "instrument_id": {
+          "type": "VARCHAR(32)",
+          "description": "Foreign key to instruments.instrument_id",
+          "foreign_key": "instruments.instrument_id"
+        },
+        "transaction_type": {
+          "type": "VARCHAR(8)",
+          "description": "BUY or SELL",
+          "enum_values": ["BUY", "SELL"]
+        },
+        "order_type": {
+          "type": "VARCHAR(16)",
+          "description": "MARKET, LIMIT, or SL (Stop Loss)",
+          "enum_values": ["MARKET", "LIMIT", "SL"]
+        },
+        "quantity": {
+          "type": "INT",
+          "description": "Order quantity in shares or contracts"
+        },
+        "price": {
+          "type": "NUMERIC(12, 2)",
+          "description": "Placed limit price or executed price"
+        },
+        "trigger_price": {
+          "type": "NUMERIC(12, 2)",
+          "description": "Stop loss trigger price if order_type = 'SL'"
+        },
+        "status": {
+          "type": "VARCHAR(16)",
+          "description": "Order outcome: COMPLETE, REJECTED, CANCELLED",
+          "enum_values": ["COMPLETE", "REJECTED", "CANCELLED"]
+        },
+        "rejection_reason": {
+          "type": "VARCHAR(64)",
+          "description": "RMS risk rejection reason: RMS_INSUFFICIENT_MARGIN, CIRCUIT_LIMIT_BREACH, ORDER_LIMIT_EXCEEDED, EXCHANGE_CONNECTIVITY_DOWN, NONE",
+          "enum_values": ["RMS_INSUFFICIENT_MARGIN", "CIRCUIT_LIMIT_BREACH", "ORDER_LIMIT_EXCEEDED", "EXCHANGE_CONNECTIVITY_DOWN", "NONE"]
+        },
+        "order_timestamp": {
+          "type": "TIMESTAMP",
+          "description": "Timestamp when the order was received by the OMS"
+        }
+      }
+    },
+    "trades": {
+      "description": "Executed fills book recording transaction turnover, client brokerage charges, STT, and exchange fees.",
+      "aliases": ["fills", "executions", "turnover_book", "brokerage_ledger"],
+      "primary_key": "trade_id",
+      "columns": {
+        "trade_id": {
+          "type": "VARCHAR(64)",
+          "description": "Unique trade fill identifier",
+          "is_primary": true
+        },
+        "order_id": {
+          "type": "VARCHAR(64)",
+          "description": "Foreign key to orders.order_id",
+          "foreign_key": "orders.order_id"
+        },
+        "client_id": {
+          "type": "VARCHAR(32)",
+          "description": "Foreign key to clients.client_id",
+          "foreign_key": "clients.client_id"
+        },
+        "instrument_id": {
+          "type": "VARCHAR(32)",
+          "description": "Foreign key to instruments.instrument_id",
+          "foreign_key": "instruments.instrument_id"
+        },
+        "traded_quantity": {
+          "type": "INT",
+          "description": "Executed number of shares/lots"
+        },
+        "traded_price": {
+          "type": "NUMERIC(12, 2)",
+          "description": "Execution price in INR"
+        },
+        "turnover": {
+          "type": "NUMERIC(14, 2)",
+          "description": "Total traded turnover: traded_quantity * traded_price"
+        },
+        "brokerage_amount": {
+          "type": "NUMERIC(10, 2)",
+          "description": "Broker commission: flat ₹20 for F&O, delivery rate for Equity"
+        },
+        "stt_tax": {
+          "type": "NUMERIC(10, 2)",
+          "description": "Securities Transaction Tax paid to government"
+        },
+        "exchange_turnover_fee": {
+          "type": "NUMERIC(10, 2)",
+          "description": "Transaction fee paid to exchange"
+        },
+        "trade_timestamp": {
+          "type": "TIMESTAMP",
+          "description": "Execution timestamp"
+        }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "source_table": "orders",
+      "source_column": "client_id",
+      "target_table": "clients",
+      "target_column": "client_id",
+      "type": "many_to_one"
+    },
+    {
+      "source_table": "orders",
+      "source_column": "instrument_id",
+      "target_table": "instruments",
+      "target_column": "instrument_id",
+      "type": "many_to_one"
+    },
+    {
+      "source_table": "trades",
+      "source_column": "order_id",
+      "target_table": "orders",
+      "target_column": "order_id",
+      "type": "one_to_one"
+    },
+    {
+      "source_table": "trades",
+      "source_column": "client_id",
+      "target_table": "clients",
+      "target_column": "client_id",
+      "type": "many_to_one"
+    },
+    {
+      "source_table": "trades",
+      "source_column": "instrument_id",
+      "target_table": "instruments",
+      "target_column": "instrument_id",
+      "type": "many_to_one"
+    }
+  ]
+}
