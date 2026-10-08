@@ -2,16 +2,24 @@
 ### Autonomous Capital Markets AI Data Analyst for Angel One
 > **Production-grade LangGraph Orchestration • Decoupled FastMCP (SSE) • sqlglot AST Query Guardrails • Deterministic Pandas Analytics**
 
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-insight--agent--iota.vercel.app-black?logo=vercel&logoColor=white)](https://insight-agent-iota.vercel.app/)
+[![Render Backend](https://img.shields.io/badge/Render-API%20Gateway-46E3B7?logo=render&logoColor=white)](https://insight-agent-backend-goe0.onrender.com)
+[![Database](https://img.shields.io/badge/PostgreSQL%2016-Render%20Managed-336791?logo=postgresql&logoColor=white)](https://dashboard.render.com/d/dpg-db3u6cub7d7c739l9k7g-a)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Prayash007%2Finsight--agent-181717?logo=github&logoColor=white)](https://github.com/Prayash007/insight-agent)
+[![Benchmark ESR](https://img.shields.io/badge/Benchmark_ESR-100%25_(60%2F60)-emerald.svg)](./evaluation/benchmark_report.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%20%7C%203.14-blue.svg)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/Orchestrator-LangGraph-orange.svg)](https://langchain-ai.github.io/langgraph/)
 [![FastMCP](https://img.shields.io/badge/Protocol-Model_Context_Protocol_(SSE)-purple.svg)](https://modelcontextprotocol.io/)
-[![Frontend](https://img.shields.io/badge/Frontend-React_19_+_Vite_+_Recharts-cyan.svg)](https://react.dev)
-[![Benchmark ESR](https://img.shields.io/badge/Benchmark_ESR-100%25_(60%2F60)-emerald.svg)](./evaluation/benchmark_report.md)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL_16-blue.svg)](https://postgresql.org)
 
-🌐 **Live Application:** [insight-agent-iota.vercel.app](https://insight-agent-iota.vercel.app/)  
-⚡ **Production API:** [insight-agent-backend-goe0.onrender.com](https://insight-agent-backend-goe0.onrender.com)  
-📖 **Interactive API Docs:** [insight-agent-backend-goe0.onrender.com/docs](https://insight-agent-backend-goe0.onrender.com/docs)
+## 🌐 Live Cloud Deployment & Infrastructure Links
+
+| Resource | Service / Provider | Live URL / Endpoint | Purpose & Functionality |
+| :--- | :--- | :--- | :--- |
+| **Interactive Web Dashboard** | **Vercel Edge** | [insight-agent-iota.vercel.app](https://insight-agent-iota.vercel.app/) | React 19 + TypeScript analytics UI, real-time SSE execution trace accordion, dynamic Recharts visualizations |
+| **Production API Gateway** | **Render Web Service** | [insight-agent-backend-goe0.onrender.com](https://insight-agent-backend-goe0.onrender.com) | FastAPI + LangGraph cyclic state machine + sqlglot AST guardrails + deterministic Pandas engine |
+| **Interactive API Documentation** | **Swagger / OpenAPI** | [insight-agent-backend-goe0.onrender.com/docs](https://insight-agent-backend-goe0.onrender.com/docs) | Interactive endpoint contracts (`POST /api/query`, `GET /api/stream`, `POST /api/admin/seed`, `GET /api/metrics`) |
+| **Production Managed Database** | **Render PostgreSQL 16** | [Render Database Instance](https://dashboard.render.com/d/dpg-db3u6cub7d7c739l9k7g-a) | Managed capital markets relational store populated with 25,000 clients and 250,000 orders/trades |
+| **Source Code Repository** | **GitHub** | [github.com/Prayash007/insight-agent](https://github.com/Prayash007/insight-agent) | Public monorepo with automated golden query benchmarks, Docker Compose, and FastMCP tooling |
 
 ---
 
@@ -23,7 +31,94 @@ Drawing on software engineering internship experience at **Microsoft**—where I
 
 ---
 
-## 2. Core Architectural Pillars
+## 2. Cloud Architecture & Live Interconnection
+
+InsightAgent is deployed across a decoupled multi-cloud architecture ensuring edge performance, zero-leak credential isolation, and resilient real-time streaming:
+
+```mermaid
+flowchart LR
+    subgraph ClientLayer["Edge / Client Layer (Vercel)"]
+        Browser["User Browser"]
+        VercelEdge["Vercel Edge CDN<br/>(insight-agent-iota.vercel.app)"]
+        VercelProxy["Edge Rewrite Rule<br/>/api/* &rarr; Render"]
+    end
+
+    subgraph ServiceLayer["Application Layer (Render Oregon)"]
+        FastAPIApp["FastAPI Gateway (Port 8000)<br/>CORS: Allow All / Credentials"]
+        LangGraphEng["LangGraph Stateful Agent<br/>(Cyclic Self-Correction)"]
+        PandasEng["Deterministic Pandas<br/>Analytics Engine"]
+        AdminSeed["One-Click Seeder<br/>POST /api/admin/seed"]
+    end
+
+    subgraph DataLayer["Persistence Layer (Render PostgreSQL)"]
+        FastMCPServer["FastMCP Read-Only Pool<br/>(2500ms Statement Timeout)"]
+        PostgresDB[("PostgreSQL 16 Instance<br/>insight-brokerage-db<br/>(25k Clients / 250k Trades)")]
+    end
+
+    Browser -->|HTTPS :443| VercelEdge
+    VercelEdge --> Browser
+    Browser -->|API Requests & SSE Stream| VercelProxy
+    VercelProxy -->|Transparent Reverse Proxy| FastAPIApp
+    FastAPIApp --> LangGraphEng
+    LangGraphEng --> FastMCPServer
+    FastMCPServer -->|psycopg SSL Pool| PostgresDB
+    FastMCPServer -->|Raw RecordBatches| PandasEng
+    PandasEng --> LangGraphEng
+    AdminSeed -->|Bulk DDL & Synthetic Data| PostgresDB
+    FastAPIApp -.->|SSE Trace Stream /api/stream| Browser
+```
+
+### How the Cloud Services Connect
+
+1. **Vercel Frontend to Render Backend Bridge:**
+   - Configured via [`frontend/vercel.json`](file:///D:/Practical/Agentic_AI_Project/frontend/vercel.json):
+     ```json
+     {
+       "framework": "vite",
+       "buildCommand": "npm run build",
+       "outputDirectory": "dist",
+       "rewrites": [
+         {
+           "source": "/api/:path*",
+           "destination": "https://insight-agent-backend-goe0.onrender.com/api/:path*"
+         }
+       ]
+     }
+     ```
+   - **Zero-CORS Reverse Proxy:** Because the frontend routes `/api/*` through Vercel's edge network, the browser sends requests to the same origin (`insight-agent-iota.vercel.app/api/*`). This eliminates cross-origin preflight overhead and prevents browser ad-blockers or CORS policies from severing long-lived Server-Sent Events (SSE) connections.
+   - **Environment Variable Fallback:** The Vite client also honors `VITE_API_BASE_URL` if configured for custom backend deployments.
+
+2. **Render Backend to Managed PostgreSQL 16:**
+   - The FastAPI backend connects to the managed PostgreSQL 16 database via the environment variable `DATABASE_URL` (`postgresql+psycopg://...`).
+   - The connection pool operates with forced SSL (`sslmode=require`), `statement_timeout = '2500ms'`, and AST query validation (`sqlglot`) to strictly guarantee read-only data access.
+
+3. **Cloud Database Seeding & Schema Population:**
+   The cloud database can be initialized and loaded with 25k clients and 250k trades via either of two methods:
+   - **Method A: One-Click Admin Seed Endpoint (Recommended)**
+     Run an HTTP POST request directly against the deployed backend:
+     ```bash
+     curl -X POST "https://insight-agent-backend-goe0.onrender.com/api/admin/seed?clients_count=10000&orders_count=100000"
+     ```
+     *Or open the [Interactive Swagger Docs](https://insight-agent-backend-goe0.onrender.com/docs#/default/seed_database_api_admin_seed_post) and click "Try it out" &rarr; "Execute".*
+   - **Method B: CLI Direct Seed via External Connection URL**
+     From your local machine, run the synthetic capital markets generator passing your Render external database string:
+     ```bash
+     python database/seed.py --db-url "postgresql://insight_agent_db_user:<PASSWORD>@dpg-db3u6cub7d7c739l9k7g-a-a.oregon-postgres.render.com/insight_agent_db?sslmode=require"
+     ```
+
+4. **Cloud Environment Variable Configuration Reference:**
+   | Service | Variable Name | Production Value / Description |
+   | :--- | :--- | :--- |
+   | **Render Backend** | `DATABASE_URL` | Render Managed Postgres Internal/External Connection URI (`postgresql+psycopg://...`) |
+   | **Render Backend** | `GEMINI_API_KEY` | Google Gemini API Key for autonomous query planning and synthesis |
+   | **Render Backend** | `DEFAULT_MODEL` | `gemini-3-flash-preview` or `gemini-2.5-flash` |
+   | **Render Backend** | `MCP_USE_IN_PROCESS` | `true` (enables low-latency in-process MCP execution) |
+   | **Render Backend** | `PORT` | Auto-configured by Render (`8000` default) |
+   | **Vercel Frontend** | `VITE_API_BASE_URL` | *(Optional)* Defaults to `/api` proxy rewrite |
+
+---
+
+## 3. Core Architectural Pillars
 
 ```mermaid
 flowchart TD
@@ -113,7 +208,7 @@ flowchart TD
 
 ---
 
-## 3. High-Fidelity Capital Markets Database
+## 4. High-Fidelity Capital Markets Database
 
 Seeded with **25,000 clients** and **250,000 orders/trades** across 8 months, modeling three realistic capital market patterns:
 
@@ -125,7 +220,7 @@ Seeded with **25,000 clients** and **250,000 orders/trades** across 8 months, mo
 
 ---
 
-## 4. Evaluation Benchmark Results (60 Golden Queries)
+## 5. Evaluation Benchmark Results (60 Golden Queries)
 
 InsightAgent includes an automated benchmark runner (`evaluation/evaluate.py`) testing 60 capital-markets queries across 5 tiers:
 
@@ -146,7 +241,7 @@ InsightAgent includes an automated benchmark runner (`evaluation/evaluate.py`) t
 
 ---
 
-## 5. Repository Structure
+## 6. Repository Structure
 
 ```
 insight-agent/
@@ -231,14 +326,14 @@ insight-agent/
 
 ---
 
-## 6. Quick Start Guide
+## 7. Quick Start Guide
 
 ### Option A: Zero-Config Local Development (Python + Vite)
 InsightAgent features an automatic dual-engine architecture: it runs out-of-the-box on Windows/macOS/Linux without needing a local PostgreSQL or Docker setup.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-username/insight-agent.git
+git clone https://github.com/Prayash007/insight-agent.git
 cd insight-agent
 
 # 2. Setup Python environment
@@ -271,7 +366,7 @@ docker-compose up --build -d
 
 ---
 
-## 7. Running Automated Test Suites
+## 8. Running Automated Test Suites
 
 ```bash
 # Run AST SQL Validator Unit Tests
@@ -292,7 +387,7 @@ python evaluation/evaluate.py
 
 ---
 
-## 8. Flagship Analytical Inquiries to Test
+## 9. Flagship Analytical Inquiries to Test
 
 1. **"Why did F&O volume drop in August?"**
    - *Result:* Triggers `diagnostic_why` decomposition; isolates `OPTIDX` (-34.7% PoP delta) which contributed to 84.2% of the contraction; displays contribution breakdown bar chart and executive summary.
