@@ -46,6 +46,34 @@ def get_metrics_catalog():
     }
 
 
+@router.post("/admin/seed")
+def seed_database(clients_count: int = 10000, orders_count: int = 100000):
+    """
+    Seeds the connected database (Postgres or SQLite) with capital markets data and anomalies.
+    """
+    from database.seed import init_schema, generate_clients, bulk_insert, generate_instruments, generate_orders_and_trades
+    try:
+        init_schema(engine)
+        clients = generate_clients(n=clients_count)
+        bulk_insert(engine, "clients", clients)
+        instruments = generate_instruments()
+        bulk_insert(engine, "instruments", instruments)
+        orders, trades = generate_orders_and_trades(clients, instruments, target_orders=orders_count)
+        bulk_insert(engine, "orders", orders)
+        bulk_insert(engine, "trades", trades)
+        tables = list_tables()
+        return {
+            "status": "success",
+            "message": "Database schema initialized and seeded successfully.",
+            "tables": tables,
+            "clients_seeded": len(clients),
+            "orders_seeded": len(orders),
+            "trades_seeded": len(trades)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/query", response_model=QueryResponse)
 async def execute_query(req: QueryRequest):
     """Executes natural language query through the LangGraph pipeline synchronously."""

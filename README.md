@@ -9,6 +9,10 @@
 [![Benchmark ESR](https://img.shields.io/badge/Benchmark_ESR-100%25_(60%2F60)-emerald.svg)](./evaluation/benchmark_report.md)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL_16-blue.svg)](https://postgresql.org)
 
+🌐 **Live Application:** [insight-agent-iota.vercel.app](https://insight-agent-iota.vercel.app/)  
+⚡ **Production API:** [insight-agent-backend-goe0.onrender.com](https://insight-agent-backend-goe0.onrender.com)  
+📖 **Interactive API Docs:** [insight-agent-backend-goe0.onrender.com/docs](https://insight-agent-backend-goe0.onrender.com/docs)
+
 ---
 
 ## 1. Executive Summary & Engineering Motivation
