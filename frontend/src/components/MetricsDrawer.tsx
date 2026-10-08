@@ -14,7 +14,8 @@ export const MetricsDrawer: React.FC<MetricsDrawerProps> = ({ isOpen, onClose })
   useEffect(() => {
     if (isOpen && Object.keys(metrics).length === 0) {
       setLoading(true);
-      fetch('/api/metrics')
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      fetch(`${apiBase}/api/metrics`)
         .then((res) => res.json())
         .then((data) => {
           setMetrics(data.metrics || {});

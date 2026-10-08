@@ -13,14 +13,16 @@ export function useAgentStream() {
     setLiveTrace([]);
     setCurrentResponse(null);
 
+    const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
     try {
       // Use SSE streaming reader
-      const streamUrl = `/api/stream?q=${encodeURIComponent(query)}`;
+      const streamUrl = `${apiBase}/api/stream?q=${encodeURIComponent(query)}`;
       const response = await fetch(streamUrl);
 
       if (!response.ok || !response.body) {
         // Fallback to synchronous POST if streaming not available
-        const postResp = await fetch('/api/query', {
+        const postResp = await fetch(`${apiBase}/api/query`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query }),
